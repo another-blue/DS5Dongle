@@ -20,6 +20,10 @@
 #if ENABLE_SERIAL
 #include "pico/stdio_usb.h"
 #endif
+#ifdef ENABLE_PLAYER_UNO_MONITOR
+#include "input_monitor.h"
+#include "serial_proto.h"
+#endif
 #include "config.h"
 #include "cmd.h"
 #if ENABLE_BATT_LED
@@ -103,6 +107,9 @@ void on_bt_data(CHANNEL_TYPE channel, uint8_t *data, uint16_t len) {
 
         if (get_config().polling_rate_mode != 2) {
             memcpy(interrupt_in_data, data + 3, 63);
+#ifdef ENABLE_PLAYER_UNO_MONITOR
+            player_uno_log_input(data + 3, len - 3);
+#endif
 #if ENABLE_BATT_LED
             battery_led_note_report();
 #endif
@@ -118,6 +125,9 @@ void on_bt_data(CHANNEL_TYPE channel, uint8_t *data, uint16_t len) {
         critical_section_enter_blocking(&report_cs);
         memcpy(interrupt_in_data, data + 3, 63);
         report_dirty = true;
+#ifdef ENABLE_PLAYER_UNO_MONITOR
+        player_uno_log_input(data + 3, len - 3);
+#endif
         critical_section_exit(&report_cs);
 #if ENABLE_BATT_LED
         battery_led_note_report();
@@ -300,6 +310,9 @@ int main() {
         wake_task();
         audio_loop();
         interrupt_loop();
+#ifdef ENABLE_PLAYER_UNO_MONITOR
+        player_uno_serial_task();
+#endif
 #if ENABLE_BATT_LED
         battery_led_tick();
 #endif

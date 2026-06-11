@@ -114,6 +114,15 @@ add_executable(ds5-bridge
         src/state_mgr.cpp
 )
 
+if (DEFINED PLAYER_UNO_ROOT)
+        target_sources(ds5-bridge PRIVATE
+                ${PLAYER_UNO_ROOT}/firmware/src/input_monitor.cpp
+                ${PLAYER_UNO_ROOT}/firmware/src/serial_proto.cpp
+        )
+        target_include_directories(ds5-bridge PRIVATE ${PLAYER_UNO_ROOT}/firmware/src)
+        target_compile_definitions(ds5-bridge PRIVATE ENABLE_PLAYER_UNO_MONITOR=1)
+endif ()
+
 if (ENABLE_BATT_LED)
         target_sources(ds5-bridge PRIVATE src/battery_led.cpp)
 endif ()
@@ -181,7 +190,9 @@ pico_set_program_name(ds5-bridge "ds5-bridge")
 pico_set_program_version(ds5-bridge "${VERSION}")
 
 # Modify the below lines to enable/disable output over UART/USB
-pico_enable_stdio_uart(ds5-bridge 1)
+# player-uno: UART stdio disabled - GP0/GP1 float on a bare Pico 2W and can
+# inject noise bytes into stdin, corrupting the haptics serial protocol.
+pico_enable_stdio_uart(ds5-bridge 0)
 pico_enable_stdio_usb(ds5-bridge ${ENABLE_SERIAL_VALUE})
 
 # Add the standard include files to the build
