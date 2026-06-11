@@ -118,8 +118,17 @@ if (DEFINED PLAYER_UNO_ROOT)
         target_sources(ds5-bridge PRIVATE
                 ${PLAYER_UNO_ROOT}/firmware/src/input_monitor.cpp
                 ${PLAYER_UNO_ROOT}/firmware/src/serial_proto.cpp
+                ${PLAYER_UNO_ROOT}/firmware/src/core_bridge.cpp
+                ${PLAYER_UNO_ROOT}/firmware/core/ds_report.cpp
+                ${PLAYER_UNO_ROOT}/firmware/core/combo_engine.cpp
+                ${PLAYER_UNO_ROOT}/firmware/core/event_emit.cpp
         )
-        target_include_directories(ds5-bridge PRIVATE ${PLAYER_UNO_ROOT}/firmware/src)
+        # ${PLAYER_UNO_ROOT}/firmware on the path so the portable core is
+        # included as "core/..." (it must never reach into src/ or the SDK).
+        target_include_directories(ds5-bridge PRIVATE
+                ${PLAYER_UNO_ROOT}/firmware/src
+                ${PLAYER_UNO_ROOT}/firmware
+        )
         target_compile_definitions(ds5-bridge PRIVATE ENABLE_PLAYER_UNO_MONITOR=1)
 endif ()
 

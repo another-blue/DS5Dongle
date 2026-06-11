@@ -21,7 +21,7 @@
 #include "pico/stdio_usb.h"
 #endif
 #ifdef ENABLE_PLAYER_UNO_MONITOR
-#include "input_monitor.h"
+#include "core_bridge.h"
 #include "serial_proto.h"
 #endif
 #include "config.h"
@@ -108,7 +108,9 @@ void on_bt_data(CHANNEL_TYPE channel, uint8_t *data, uint16_t len) {
         if (get_config().polling_rate_mode != 2) {
             memcpy(interrupt_in_data, data + 3, 63);
 #ifdef ENABLE_PLAYER_UNO_MONITOR
-            player_uno_log_input(data + 3, len - 3);
+            // Producer side only: push raw bytes into the player-uno ring
+            // buffer; the combo engine consumes them in the main loop.
+            player_uno_on_report(data + 3, len - 3);
 #endif
 #if ENABLE_BATT_LED
             battery_led_note_report();
@@ -126,7 +128,7 @@ void on_bt_data(CHANNEL_TYPE channel, uint8_t *data, uint16_t len) {
         memcpy(interrupt_in_data, data + 3, 63);
         report_dirty = true;
 #ifdef ENABLE_PLAYER_UNO_MONITOR
-        player_uno_log_input(data + 3, len - 3);
+        player_uno_on_report(data + 3, len - 3);
 #endif
         critical_section_exit(&report_cs);
 #if ENABLE_BATT_LED
@@ -311,6 +313,7 @@ int main() {
         audio_loop();
         interrupt_loop();
 #ifdef ENABLE_PLAYER_UNO_MONITOR
+        player_uno_core_task();
         player_uno_serial_task();
 #endif
 #if ENABLE_BATT_LED
